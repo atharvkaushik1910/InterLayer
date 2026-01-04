@@ -9,7 +9,7 @@ const externalLink = document.getElementById('externalLink');
 const placeholder = document.querySelector('.placeholder');
 const chatHistory = document.getElementById('chatHistory');
 const startTavusBtn = document.getElementById('startTavusBtn');
-const tavusFrame = document.getElementById('tavusFrame');
+// tavusFrame removed as we use DailyIframe now
 const startTavusOverlay = document.getElementById('startTavusOverlay');
 
 let pollingInterval;
@@ -40,6 +40,8 @@ function addToChat(message, sender = 'system') {
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
+let dailyCallFrame = null;
+
 async function startTavusSession() {
     startTavusBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting...';
     startTavusBtn.disabled = true;
@@ -58,10 +60,71 @@ async function startTavusSession() {
         log(`Tavus session created. URL: ${data.conversation_url}`, 'success');
 
         if (data.conversation_url) {
-            tavusFrame.src = data.conversation_url;
-            startTavusOverlay.style.display = 'none';
-            addToChat("Video connecting... Please allow Camera/Microphone access in your URL bar if asked.", "system");
-            log("Please check browser permissions for Camera/Mic.", "warning");
+            // Validate Daily SDK
+            if (!window.DailyIframe) {
+                throw new Error("Daily.co SDK not loaded. Check internet connection or ad blockers.");
+            }
+
+            // Initialize Daily Call Frame
+            const videoContainer = document.getElementById('tavusVideoContainer');
+
+            // Clean up old frame if exists
+            if (dailyCallFrame) {
+                dailyCallFrame.destroy();
+            }
+
+            log("Creating Daily Iframe...", "info");
+
+            // Create new frame with high z-index
+            dailyCallFrame = window.DailyIframe.createFrame(videoContainer, {
+                iframeStyle: {
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    zIndex: '20' // Ensure it's above the overlay (z-index 10)
+                },
+                showLeaveButton: true,
+                showFullscreenButton: true
+            });
+
+            // Event Listeners
+            dailyCallFrame.on('joined-meeting', (event) => {
+                log("Joined meeting! Waiting for Tavus agent...", "success");
+                startTavusOverlay.style.display = 'none';
+            });
+
+            dailyCallFrame.on('participant-joined', (event) => {
+                log(`Participant joined: ${event.participant.user_name || 'Tavus Avatar'}`, 'info');
+            });
+
+            dailyCallFrame.on('track-started', (event) => {
+                log(`Video track started: ${event.participant.user_name || 'System'} (${event.track.kind})`, 'success');
+            });
+
+            dailyCallFrame.on('error', (e) => {
+                log(`Daily Error: ${e?.errorMsg}`, 'error');
+                console.error("Daily Error:", e);
+                startTavusBtn.innerHTML = 'Start Conversation';
+                startTavusBtn.disabled = false;
+            });
+
+            // Force hide overlay after 10 seconds if not joined (timeout fallback)
+            setTimeout(() => {
+                if (startTavusOverlay.style.display !== 'none') {
+                    log("Join timeout: Forcing overlay hide to check video.", "warning");
+                    startTavusOverlay.style.display = 'none';
+                }
+            }, 10000);
+
+            // Join the meeting
+            log("Joining Daily room...", "info");
+            await dailyCallFrame.join({ url: data.conversation_url });
+
+            addToChat("Video connecting... Please allow Camera/Microphone access.", "system");
+
         } else {
             throw new Error("No conversation_url returned from API");
         }

@@ -47,6 +47,9 @@ class IntentRequest(BaseModel):
 class TavusSessionRequest(BaseModel):
     replica_id: str = None
     persona_id: str = None
+    conversation_name: str = None
+    context: str = None
+    properties: dict = None
 
 
 # Global variable to store active session
@@ -62,11 +65,19 @@ async def create_tavus_session(request: TavusSessionRequest):
     replica_id = request.replica_id or TAVUS_REPLICA_ID
     persona_id = request.persona_id or TAVUS_PERSONA_ID
     
+    print(f"DEBUG: creating session for replica_id={replica_id}, persona_id={persona_id}")
+
     if not replica_id:
         raise HTTPException(status_code=400, detail="Replica ID required")
 
     try:
-        conversation = tavus_client.create_conversation(replica_id, persona_id=persona_id)
+        conversation = tavus_client.create_conversation(
+            replica_id, 
+            persona_id=persona_id,
+            conversation_name=request.conversation_name,
+            context=request.context,
+            properties=request.properties
+        )
         return conversation
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

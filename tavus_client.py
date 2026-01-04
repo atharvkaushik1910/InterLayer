@@ -12,7 +12,7 @@ class TavusClient:
             "Content-Type": "application/json"
         }
 
-    def create_conversation(self, replica_id, persona_id=None, callback_url=None):
+    def create_conversation(self, replica_id, persona_id=None, callback_url=None, conversation_name=None, context=None, properties=None):
         """
         Creates a new conversation with a Replica.
         """
@@ -20,17 +20,25 @@ class TavusClient:
         payload = {
             "replica_id": replica_id,
             "persona_id": persona_id, 
-            "callback_url": callback_url 
+            "callback_url": callback_url,
+            "conversation_name": conversation_name,
+            "context": context,
+            "properties": properties
         }
 
         # Remove None values
         payload = {k: v for k, v in payload.items() if v is not None}
         
-        response = requests.post(url, headers=self.headers, json=payload)
-        if not response.ok:
-            print(f"Tavus API Error: {response.text}")
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = requests.post(url, headers=self.headers, json=payload)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            print(f"Tavus API Error: {e.response.text}") # Print full error details
+            raise e
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            raise e
 
 
     def get_conversation(self, conversation_id):

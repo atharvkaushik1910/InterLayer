@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="/static/style.css">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Daily.co SDK for Tavus -->
+    <script crossorigin src="https://unpkg.com/@daily-co/daily-js"></script>
 </head>
 
 <body>
@@ -88,9 +90,8 @@
                                 <i class="fa-solid fa-headset" style="font-size: 3rem; margin-bottom: 10px;"></i>
                                 <button id="startTavusBtn" class="primary-btn">Start Conversation</button>
                             </div>
-                            <!-- Daily.co / Tavus iframe will be injected here or handled by SDK -->
-                            <iframe id="tavusFrame" allow="camera; microphone; fullscreen; display-capture; autoplay"
-                                style="width:100%; height:100%; border:none;"></iframe>
+                            <!-- Daily.co / Tavus iframe will be injected here by script.js -->
+
                         </div>
                     </div>
 
