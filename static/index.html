@@ -1,112 +1,175 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Browser Use Agent</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/style.css" />
     <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <!-- Daily.co SDK for Tavus -->
     <script crossorigin src="https://unpkg.com/@daily-co/daily-js"></script>
-</head>
+    <script src="https://www.WebRTC-Experiment.com/RecordRTC.js"></script>
+  </head>
 
-<body>
+  <body>
     <div class="app-container">
-        <header>
-            <div class="logo">
-                <i class="fa-solid fa-robot"></i>
-                <span>Browser Use Agent</span>
+      <header>
+        <div class="logo">
+          <i class="fa-solid fa-robot"></i>
+          <span>Browser Use Agent</span>
+        </div>
+        <div class="status-indicator" id="connectionStatus">
+          <div class="dot"></div>
+          <span>Connected</span>
+        </div>
+      </header>
+
+      <main>
+        <section class="control-panel">
+          <div class="card input-card">
+            <h2>Execute Task</h2>
+
+            <div class="input-group">
+              <div
+                class="chat-interface"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 10px;
+                  margin-bottom: 10px;
+                "
+              >
+                <div
+                  id="chatHistory"
+                  style="
+                    height: 150px;
+                    overflow-y: auto;
+                    background: #f5f5f5;
+                    border-radius: 4px;
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                  "
+                >
+                  <div class="message system">
+                    Hello! I am your Tavus Agent. How can I help you today?
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 10px">
+                <input
+                  type="text"
+                  id="taskInput"
+                  placeholder="Talk to me... (e.g. Find best winter clothes)"
+                  style="
+                    flex: 1;
+                    padding: 10px;
+                    border-radius: 4px;
+                    border: 1px solid #ddd;
+                  "
+                />
+                <button id="runBtn" class="primary-btn">
+                  <i class="fa-solid fa-paper-plane"></i> Send
+                </button>
+              </div>
             </div>
-            <div class="status-indicator" id="connectionStatus">
-                <div class="dot"></div>
-                <span>Connected</span>
+          </div>
+
+          <div class="card status-card">
+            <h2>Live Status</h2>
+            <div class="status-details">
+              <div class="status-item">
+                <span class="label">Status:</span>
+                <span class="value" id="currentStatus">Idle</span>
+              </div>
+              <div class="status-item">
+                <span class="label">Task ID:</span>
+                <span class="value mono" id="taskId">-</span>
+              </div>
             </div>
-        </header>
+            <div class="console-output" id="consoleOutput">
+              <div class="log-entry system">Ready for new task...</div>
+            </div>
+          </div>
+        </section>
 
-        <main>
-            <section class="control-panel">
-                <div class="card input-card">
-                    <h2>Execute Task</h2>
-
-                    <div class="input-group">
-                        <div class="chat-interface"
-                            style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
-                            <div id="chatHistory"
-                                style="height: 150px; overflow-y: auto; background: #f5f5f5; border-radius: 4px; padding: 10px; border: 1px solid #ddd;">
-                                <div class="message system">Hello! I am your Tavus Agent. How can I help you today?
-                                </div>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="taskInput"
-                                placeholder="Talk to me... (e.g. Find best winter clothes)"
-                                style="flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
-                            <button id="runBtn" class="primary-btn">
-                                <i class="fa-solid fa-paper-plane"></i> Send
-                            </button>
-                        </div>
-                    </div>
-
+        <section class="preview-panel">
+          <div class="card preview-card">
+            <div class="card-header">
+              <h2>Live View</h2>
+              <a
+                href="#"
+                target="_blank"
+                id="externalLink"
+                class="icon-link"
+                title="Open in new tab"
+              >
+                <i class="fa-solid fa-external-link-alt"></i>
+              </a>
+            </div>
+            <!-- Tavus Video Section -->
+            <div class="tavus-section" style="margin-bottom: 20px">
+              <div
+                class="video-container"
+                id="tavusVideoContainer"
+                style="
+                  width: 100%;
+                  height: 300px;
+                  background: #000;
+                  border-radius: 8px;
+                  overflow: hidden;
+                  position: relative;
+                "
+              >
+                <div
+                  id="startTavusOverlay"
+                  style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 10;
+                    color: white;
+                  "
+                >
+                  <i
+                    class="fa-solid fa-headset"
+                    style="font-size: 3rem; margin-bottom: 10px"
+                  ></i>
+                  <button id="startTavusBtn" class="primary-btn">
+                    Start Conversation
+                  </button>
                 </div>
+                <!-- Daily.co / Tavus iframe will be injected here by script.js -->
+              </div>
+            </div>
 
-                <div class="card status-card">
-                    <h2>Live Status</h2>
-                    <div class="status-details">
-                        <div class="status-item">
-                            <span class="label">Status:</span>
-                            <span class="value" id="currentStatus">Idle</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="label">Task ID:</span>
-                            <span class="value mono" id="taskId">-</span>
-                        </div>
-                    </div>
-                    <div class="console-output" id="consoleOutput">
-                        <div class="log-entry system">Ready for new task...</div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="preview-panel">
-                <div class="card preview-card">
-                    <div class="card-header">
-
-                        <h2>Live View</h2>
-                        <a href="#" target="_blank" id="externalLink" class="icon-link" title="Open in new tab">
-                            <i class="fa-solid fa-external-link-alt"></i>
-                        </a>
-                    </div>
-                    <!-- Tavus Video Section -->
-                    <div class="tavus-section" style="margin-bottom: 20px;">
-                        <div class="video-container" id="tavusVideoContainer"
-                            style="width: 100%; height: 300px; background: #000; border-radius: 8px; overflow: hidden; position: relative;">
-                            <div id="startTavusOverlay"
-                                style="position: absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; background: rgba(0,0,0,0.7); z-index: 10; color: white;">
-                                <i class="fa-solid fa-headset" style="font-size: 3rem; margin-bottom: 10px;"></i>
-                                <button id="startTavusBtn" class="primary-btn">Start Conversation</button>
-                            </div>
-                            <!-- Daily.co / Tavus iframe will be injected here by script.js -->
-
-                        </div>
-                    </div>
-
-                    <div class="iframe-container" id="iframeContainer">
-                        <div class="placeholder">
-                            <i class="fa-solid fa-tv"></i>
-                            <p>Live browser view will appear here</p>
-                        </div>
-                        <iframe id="liveViewFrame" src="" frameborder="0"></iframe>
-                    </div>
-                </div>
-            </section>
-        </main>
+            <div class="iframe-container" id="iframeContainer">
+              <div class="placeholder">
+                <i class="fa-solid fa-tv"></i>
+                <p>Live browser view will appear here</p>
+              </div>
+              <iframe id="liveViewFrame" src="" frameborder="0"></iframe>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
     <script src="/static/script.js"></script>
-</body>
-
+  </body>
 </html>
